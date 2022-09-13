@@ -18,12 +18,14 @@ public class NetworkedClient : MonoBehaviour
     int ourClientID;
 
     // Start is called before the first frame update
+    [System.Obsolete]
     void Start()
     {
         Connect();
     }
 
     // Update is called once per frame
+    [System.Obsolete]
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.S))
@@ -32,6 +34,7 @@ public class NetworkedClient : MonoBehaviour
         UpdateNetworkConnection();
     }
 
+    [System.Obsolete]
     private void UpdateNetworkConnection()
     {
         if (isConnected)
@@ -62,7 +65,8 @@ public class NetworkedClient : MonoBehaviour
             }
         }
     }
-    
+
+    [System.Obsolete]
     private void Connect()
     {
 
@@ -79,7 +83,7 @@ public class NetworkedClient : MonoBehaviour
             hostID = NetworkTransport.AddHost(topology, 0);
             Debug.Log("Socket open.  Host ID = " + hostID);
 
-            connectionID = NetworkTransport.Connect(hostID, "192.168.2.37", socketPort, 0, out error); // server is local on network
+            connectionID = NetworkTransport.Connect(hostID, "10.226.128.10", socketPort, 0, out error); // server is local on network
 
             if (error == 0)
             {
@@ -90,12 +94,14 @@ public class NetworkedClient : MonoBehaviour
             }
         }
     }
-    
+
+    [System.Obsolete]
     public void Disconnect()
     {
         NetworkTransport.Disconnect(hostID, connectionID, out error);
     }
-    
+
+    [System.Obsolete]
     public void SendMessageToHost(string msg)
     {
         byte[] buffer = Encoding.Unicode.GetBytes(msg);
