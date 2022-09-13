@@ -1,2 +1,2 @@
 # TicTacToeClient
- 
+ by Andrii Gastello
