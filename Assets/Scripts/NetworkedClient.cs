@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+using System.IO;
+
 
 public class NetworkedClient : MonoBehaviour
 {
+    string userLogin, userPassword;
 
     int connectionID;
     int maxConnections = 1000;
     int reliableChannelID;
     int unreliableChannelID;
     int hostID;
-    int socketPort = 5491;
+    int socketPort = 5492;
     byte error;
     bool isConnected = false;
     int ourClientID;
@@ -56,7 +61,7 @@ public class NetworkedClient : MonoBehaviour
                 case NetworkEventType.DataEvent:
                     string msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                     ProcessRecievedMsg(msg, recConnectionID);
-                    //Debug.Log("got msg = " + msg);
+                    Debug.Log("got msg = " + msg);
                     break;
                 case NetworkEventType.DisconnectEvent:
                     isConnected = false;
@@ -83,7 +88,7 @@ public class NetworkedClient : MonoBehaviour
             hostID = NetworkTransport.AddHost(topology, 0);
             Debug.Log("Socket open.  Host ID = " + hostID);
 
-            connectionID = NetworkTransport.Connect(hostID, "10.226.128.10", socketPort, 0, out error); // server is local on network
+            connectionID = NetworkTransport.Connect(hostID, "10.0.195.37", socketPort, 0, out error); // server is local on network
 
             if (error == 0)
             {
@@ -118,5 +123,21 @@ public class NetworkedClient : MonoBehaviour
         return isConnected;
     }
 
+    [System.Obsolete]
+    public void SendUserLoginReq(string lg, string pw)
+    {
+        SendMessageToHost(lg + "," + pw);
+    }
+
+    public void getLogin(string login)
+    {
+        this.userLogin = login;
+        Debug.Log(login);
+    }
+
+    static public void getPassword(string pw)
+    {
+        
+    }
 
 }
