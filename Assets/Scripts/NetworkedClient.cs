@@ -1,116 +1,110 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.TestTools;
-using UnityEngine.UI;
-using System.IO;
-
 
 public class NetworkedClient : MonoBehaviour
 {
-    string userLogin, userPassword;
-
-    int connectionID;
-    int maxConnections = 1000;
-    int reliableChannelID;
-    int unreliableChannelID;
-    int hostID;
-    int socketPort = 5492;
-    byte error;
-    bool isConnected = false;
-    int ourClientID;
+    private readonly int _maxConnections = 1000;
+    private readonly int _socketPort = 5492;
+    private int _connectionID;
+    private byte _error;
+    private int _hostID;
+    private bool _isConnected;
+    private int _ourClientID;
+    private int _reliableChannelID;
+    private int _unreliableChannelID;
+    private string _userLogin, _userPassword;
 
     // Start is called before the first frame update
-    [System.Obsolete]
-    void Start()
+    [Obsolete]
+    private void Start()
     {
         Connect();
     }
 
     // Update is called once per frame
-    [System.Obsolete]
-    void Update()
+    [Obsolete]
+    private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.S))
             SendMessageToHost("Hello from client");
 
         UpdateNetworkConnection();
     }
 
-    [System.Obsolete]
+    [Obsolete]
     private void UpdateNetworkConnection()
     {
-        if (isConnected)
+        if (_isConnected)
         {
             int recHostID;
             int recConnectionID;
             int recChannelID;
-            byte[] recBuffer = new byte[1024];
-            int bufferSize = 1024;
+            var recBuffer = new byte[1024];
+            var bufferSize = 1024;
             int dataSize;
-            NetworkEventType recNetworkEvent = NetworkTransport.Receive(out recHostID, out recConnectionID, out recChannelID, recBuffer, bufferSize, out dataSize, out error);
+            var recNetworkEvent = NetworkTransport.Receive(out recHostID, out recConnectionID,
+                out recChannelID, recBuffer, bufferSize, out dataSize, out _error);
 
             switch (recNetworkEvent)
             {
                 case NetworkEventType.ConnectEvent:
                     Debug.Log("connected.  " + recConnectionID);
-                    ourClientID = recConnectionID;
+                    _ourClientID = recConnectionID;
                     break;
                 case NetworkEventType.DataEvent:
-                    string msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
+                    var msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                     ProcessRecievedMsg(msg, recConnectionID);
                     Debug.Log("got msg = " + msg);
                     break;
                 case NetworkEventType.DisconnectEvent:
-                    isConnected = false;
+                    _isConnected = false;
                     Debug.Log("disconnected.  " + recConnectionID);
                     break;
             }
         }
     }
 
-    [System.Obsolete]
+    [Obsolete]
     private void Connect()
     {
-
-        if (!isConnected)
+        if (!_isConnected)
         {
             Debug.Log("Attempting to create connection");
 
             NetworkTransport.Init();
 
-            ConnectionConfig config = new ConnectionConfig();
-            reliableChannelID = config.AddChannel(QosType.Reliable);
-            unreliableChannelID = config.AddChannel(QosType.Unreliable);
-            HostTopology topology = new HostTopology(config, maxConnections);
-            hostID = NetworkTransport.AddHost(topology, 0);
-            Debug.Log("Socket open.  Host ID = " + hostID);
+            var config = new ConnectionConfig();
+            _reliableChannelID = config.AddChannel(QosType.Reliable);
+            _unreliableChannelID = config.AddChannel(QosType.Unreliable);
+            var topology = new HostTopology(config, _maxConnections);
+            _hostID = NetworkTransport.AddHost(topology, 0);
+            Debug.Log("Socket open.  Host ID = " + _hostID);
 
-            connectionID = NetworkTransport.Connect(hostID, "10.0.195.37", socketPort, 0, out error); // server is local on network
+            _connectionID =
+                NetworkTransport.Connect(_hostID, "10.0.195.37", _socketPort, 0, out _error); // server is local on network
 
-            if (error == 0)
+            if (_error == 0)
             {
-                isConnected = true;
+                _isConnected = true;
 
-                Debug.Log("Connected, id = " + connectionID);
-
+                Debug.Log("Connected, id = " + _connectionID);
             }
         }
     }
 
-    [System.Obsolete]
+    [Obsolete]
     public void Disconnect()
     {
-        NetworkTransport.Disconnect(hostID, connectionID, out error);
+        NetworkTransport.Disconnect(_hostID, _connectionID, out _error);
     }
 
-    [System.Obsolete]
+    [Obsolete]
     public void SendMessageToHost(string msg)
     {
-        byte[] buffer = Encoding.Unicode.GetBytes(msg);
-        NetworkTransport.Send(hostID, connectionID, reliableChannelID, buffer, msg.Length * sizeof(char), out error);
+        var buffer = Encoding.Unicode.GetBytes(msg);
+        NetworkTransport.Send(_hostID, _connectionID, _reliableChannelID, buffer, msg.Length * sizeof(char), out _error);
     }
 
     private void ProcessRecievedMsg(string msg, int id)
@@ -120,24 +114,22 @@ public class NetworkedClient : MonoBehaviour
 
     public bool IsConnected()
     {
-        return isConnected;
+        return _isConnected;
     }
 
-    [System.Obsolete]
+    [Obsolete]
     public void SendUserLoginReq(string lg, string pw)
     {
         SendMessageToHost(lg + "," + pw);
     }
 
-    public void getLogin(string login)
+    public void GetLogin(string login)
     {
-        this.userLogin = login;
+        _userLogin = login;
         Debug.Log(login);
     }
 
-    static public void getPassword(string pw)
+    public static void GetPassword(string pw)
     {
-        
     }
-
 }
