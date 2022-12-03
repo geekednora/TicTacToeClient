@@ -1,10 +1,13 @@
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class NetworkedClient : MonoBehaviour
 {
+    private readonly string _IPaddress = "10.0.225.72";
     private readonly int _maxConnections = 1000;
     private readonly int _socketPort = 5492;
     private int _connectionID;
@@ -21,15 +24,13 @@ public class NetworkedClient : MonoBehaviour
     private void Start()
     {
         Connect();
+        Debug.Log(LocalIPAddress());
     }
 
     // Update is called once per frame
     [Obsolete]
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.S))
-            SendMessageToHost("Hello from client");
-
         UpdateNetworkConnection();
     }
 
@@ -63,33 +64,38 @@ public class NetworkedClient : MonoBehaviour
                     Debug.Log("disconnected.  " + recConnectionID);
                     break;
             }
+
+            if (Input.GetKeyDown(KeyCode.S)) SendMessageToHost("Hi there!");
         }
     }
 
     [Obsolete]
     private void Connect()
     {
+        Debug.Log("Attempting to connect.\n Host: " + _IPaddress + ":" + _socketPort);
+        
         if (!_isConnected)
         {
-            Debug.Log("Attempting to create connection");
+            Debug.Log("Client is disconnected. Connecting...");
 
-            NetworkTransport.Init();
+            NetworkTransport.Init(); // init network porotocol
 
+            // init config
             var config = new ConnectionConfig();
             _reliableChannelID = config.AddChannel(QosType.Reliable);
             _unreliableChannelID = config.AddChannel(QosType.Unreliable);
+
+            // init topology
             var topology = new HostTopology(config, _maxConnections);
             _hostID = NetworkTransport.AddHost(topology, 0);
             Debug.Log("Socket open.  Host ID = " + _hostID);
 
-            _connectionID =
-                NetworkTransport.Connect(_hostID, "10.0.195.37", _socketPort, 0, out _error); // server is local on network
+            _connectionID = NetworkTransport.Connect(_hostID, _IPaddress, _socketPort, 0, out _error);
 
             if (_error == 0)
             {
                 _isConnected = true;
-
-                Debug.Log("Connected, id = " + _connectionID);
+                Debug.Log("Successfully connected! Client ID : " + _connectionID);
             }
         }
     }
@@ -104,7 +110,8 @@ public class NetworkedClient : MonoBehaviour
     public void SendMessageToHost(string msg)
     {
         var buffer = Encoding.Unicode.GetBytes(msg);
-        NetworkTransport.Send(_hostID, _connectionID, _reliableChannelID, buffer, msg.Length * sizeof(char), out _error);
+        NetworkTransport.Send(_hostID, _connectionID, _reliableChannelID, buffer, msg.Length * sizeof(char),
+            out _error);
     }
 
     private void ProcessRecievedMsg(string msg, int id)
@@ -116,20 +123,20 @@ public class NetworkedClient : MonoBehaviour
     {
         return _isConnected;
     }
-
-    [Obsolete]
-    public void SendUserLoginReq(string lg, string pw)
+    
+    public static string LocalIPAddress()
     {
-        SendMessageToHost(lg + "," + pw);
-    }
-
-    public void GetLogin(string login)
-    {
-        _userLogin = login;
-        Debug.Log(login);
-    }
-
-    public static void GetPassword(string pw)
-    {
+        IPHostEntry host;
+        string localIP = "0.0.0.0";
+        host = Dns.GetHostEntry(Dns.GetHostName());
+        foreach (IPAddress ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                localIP = ip.ToString();
+                break;
+            }
+        }
+        return localIP;
     }
 }
